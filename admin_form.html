@@ -1,0 +1,302 @@
+<link rel="stylesheet" href="https://www.w3schools.com/w3css/4/w3.css">
+
+<div id="props_admin_form_content">
+    <div class="w3-bar w3-black">
+      <a class="w3-bar-item w3-button w3-gray" id="props_prop_btn" onclick="props_menu(this)">Properties</a>
+    <!--  <a class="w3-bar-item w3-button" id="props_prefab_btn" onclick="props_menu(this)">Prefabs</a> !-->
+    </div>
+  <div id="props_add_prop" class="w3-panel">
+    <a class="w3-button w3-gray" id="props_addNew" onclick="props_add_new_row()">Add New Prop</a>
+    <input type="hidden" name="props_json" value="" id="props_json" />
+  </div>
+  <div id="props_add_prefab" class="w3-panel" style="display:none">
+    <div id=prefab_list>
+    </div>
+    <a onclick=prefab_add_new() class="w3-button w3-gray" id="prefab_addNew_btn">Add New Prefab</a>
+    <input type="hidden" name="prefabs_json" value="" id="prefabs_json" />
+  </div>
+  <div id="prop_shortcode" class="w3-container w3-blue">
+  </div>
+</div>
+
+<script>
+
+document.getElementById("prop_shortcode").innerHTML = "Shortcode: [product-table post_id=" + product_id + "]";
+
+  function update_prefab_json(){
+    document.getElementById("prefabs_json").setAttribute("value", JSON.stringify(prefabs));
+  }
+
+  function prefab_add_new(){
+
+    var id = 0;
+    if (prefabs.length > 0){
+      id = prefabs[prefabs.length-1].id + 1;
+    }
+
+    prefabs.push({"id": id, "name":"New Prefab", "prop_ids": []});
+    props_render_prefab(prefabs[prefabs.length-1].id,
+                        prefabs[prefabs.length-1].prop_ids,
+                        prefabs[prefabs.length-1].name);
+    document.getElementById("prefab_content" + id).style.display = "block";
+    document.getElementById("prefab_content" + id).setAttribute("prefab_display", "block");
+    //console.log(prefabs);
+    update_prefab_json();
+  }
+
+
+  if (prefabs == null){
+    var prefabs = [];
+  } else {
+    prefabs_redraw_all();
+  }
+
+  if (props == null){
+    var props = Array();
+  } else {
+    props_update_json_field();
+    props.forEach(function(prop, index){
+      props_render_row(prop.id, prop.text, prop.price, prop.descr_page_id, prop.included);
+    });
+  }
+
+  function prefabs_redraw_all(){
+    document.getElementById("prefab_list").innerHTML = "";
+    prefabs.forEach(function(prefab, index){
+      props_render_prefab(prefab.id, prefab.prop_ids, prefab.name);
+    });
+  }
+
+function props_show_prefab_content(prefab_id){
+  var prefab_el = document.getElementById(prefab_id);
+  if (prefab_el.getAttribute("prefab_display") == "none"){
+    prefab_el.style.display = "block";
+    prefab_el.setAttribute("prefab_display", "block");
+  } else {
+    prefab_el.style.display = "none";
+    prefab_el.setAttribute("prefab_display", "none");
+  }
+}
+
+  //handles the checkbox click
+  //modifies the json prefab
+  function prefab_checkbox_click(checkbox){
+    if (checkbox.checked){
+      //checkbox was unchecked before, and user checked it now
+      var prop_id = checkbox.getAttribute("propid");
+      var prefab_id = checkbox.getAttribute("prefabid");
+      var index_to_remove = null;
+      prefabs.forEach(function(prefab, index){
+        if (prefab.id == prefab_id){
+          prefab.prop_ids.push(prop_id);
+        }
+      });
+    //  console.log(prefabs);
+    } else {
+      var prop_id = checkbox.getAttribute("propid");
+      var prefab_id = checkbox.getAttribute("prefabid");
+      var index_to_remove = null;
+      prefabs.forEach(function(prefab, index){
+        if (prefab.id == prefab_id){
+          prefab.prop_ids.forEach(function(prop_id_iteration, ind){
+            if (prop_id_iteration == prop_id){
+              index_to_remove == ind;
+            }
+          prefab.prop_ids.splice(index_to_remove, 1);
+          });
+        }
+      });
+    //  console.log(prefabs);
+    }
+    update_prefab_json();
+  }
+
+  //handles prefab name input
+  function prefab_name_input(input_obj){
+    prefab_id = input_obj.getAttribute("prefabid");
+    prefabs.forEach(function(prefab, index){
+      if (prefab.id == prefab_id){
+        prefab.name = input_obj.value;
+        document.getElementById("prefab_header_" +prefab_id).innerHTML = prefab.name;
+    }
+    });
+    //console.log(prefabs);
+    update_prefab_json();
+  }
+
+  //delete a prefab
+  function prefab_delete(prefab_id){
+    var prefab_el = document.getElementById("prefab_" + prefab_id);
+    document.getElementById("prefab_list").removeChild(prefab_el);
+
+    var index_to_remove = null;
+    prefabs.forEach(function(prefab, index){
+      if (prefab.id == prefab_id){
+        index_to_remove = index;
+      }
+    });
+    prefabs.splice(index_to_remove, 1);
+    //console.log(prefabs);
+    update_prefab_json();
+
+  }
+
+  //renders a specific prefab
+  function props_render_prefab(prefab_id ,prep_id_table=[], name="New_Prefab"){
+    var prefab = document.createElement("DIV");
+    var prefab_container = document.createElement("DIV");
+    var prefab_header = document.createElement("A");
+    var prefab_delete_btn = document.createElement("A");
+
+    prefab_delete_btn.setAttribute("onclick", "prefab_delete(" + prefab_id + ")")
+    prefab_delete_btn.setAttribute("class", "w3-button w3-red");
+    prefab_delete_btn.innerHTML = "Delete";
+
+    prefab.setAttribute("class", "w3-panel");
+    prefab.setAttribute("id", "prefab_" + prefab_id);
+
+    prefab_header.setAttribute("class", "w3-button w3-block w3-left-align w3-gray");
+    prefab_header.setAttribute("id", "prefab_header_" + prefab_id);
+    prefab_header.setAttribute("onclick", "props_show_prefab_content( 'prefab_content"+ prefab_id +"')");
+    prefab_header.innerHTML = name;
+
+    prefab_container.setAttribute("class", "w3-container w3-light-gray");
+    prefab_container.setAttribute("id", "prefab_content" +prefab_id);
+    prefab_container.setAttribute("prefab_display", "none");
+    prefab_container.style.display = "none";
+    prefab_container.innerHTML="<p><input type='text' oninput='prefab_name_input(this)' prefabid=" + prefab_id +" value='"+ name +"' /></p>";
+
+    props.forEach(function(prop, index){
+      var prop_row = document.createElement("P");
+      prop_row.innerHTML = '<input type="checkbox" prefabid="' + prefab_id + '" onclick="prefab_checkbox_click(this)" propid="'+ prop.id +'"/> ' + prop.text + " Price: " + prop.price;
+      prefab_container.appendChild(prop_row);
+    });
+
+    prep_id_table.forEach(function(prop_id, index){
+      var prop_HTMLcollection = prefab_container.getElementsByTagName("input");
+      for( var i = 0; i<prop_HTMLcollection.length; i++){
+        if (prop_HTMLcollection[i].getAttribute("propid") == prop_id){
+          prop_HTMLcollection[i].checked = true;
+        }
+      }
+    });
+
+    prefab_container.appendChild(prefab_delete_btn);
+    prefab_container.appendChild(document.createElement("BR"));
+
+    prefab.appendChild(prefab_header);
+    prefab.appendChild(prefab_container);
+    document.getElementById("prefab_list").appendChild(prefab);
+  }
+
+  //handles the menu functionality
+  function props_menu (btn){
+    if(btn.getAttribute("id") == "props_prop_btn"){
+      btn.setAttribute("class", "w3-bar-item w3-button w3-gray" );
+      document.getElementById("props_prefab_btn").setAttribute("class", "w3-bar-item w3-button");
+
+      document.getElementById("props_add_prop").style.display = "block";
+      document.getElementById("props_add_prefab").style.display = "none";
+    } else {
+      btn.setAttribute("class", "w3-bar-item w3-button w3-gray" );
+      document.getElementById("props_prop_btn").setAttribute("class", "w3-bar-item w3-button");
+
+      document.getElementById("props_add_prop").style.display = "none";
+      document.getElementById("props_add_prefab").style.display = "block";
+    }
+  }
+
+  function props_remove(delete_button_element){
+    var form_row = delete_button_element.parentNode;
+    //remove the prop from the prop table
+    var propid_attr = form_row.getAttribute("propid");
+    //find out the index in the table of the prop with the propid_attr id
+    var index_to_remove = null;
+    props.forEach(function(prop, index){
+      if (propid_attr == prop.id){
+        index_to_remove = index;
+      }
+    });
+
+    //splice the Array
+    props.splice(index_to_remove, 1);
+
+    //delete the html object
+    document.getElementById("props_add_prop").removeChild(form_row);
+
+    //update the json field
+    props_update_json_field();
+  }
+
+  function props_update_json_field(){
+    document.getElementById("props_json").setAttribute("value", JSON.stringify(props));
+    prefabs_redraw_all();
+    // console.log(props);
+  }
+
+  function prop_update_input(obj){
+    var propid_attr = obj.getAttribute("propid");
+    var name_attr = obj.getAttribute("name");
+    var value_attr = obj.value;
+
+    props.forEach(function(prop, index){
+      if (prop.id == propid_attr){
+        if(name_attr == "text"){
+          prop.text = value_attr;
+          //console.log("text");
+        }  else if(name_attr == "price" ){
+          prop.price = value_attr;
+        } else if (name_attr == "descr_page_id"){
+          prop.descr_page_id = value_attr;
+        } else if (name_attr == "included"){
+          prop.included = obj.checked;
+        }
+        ///console.log(props);
+
+      }
+      props_update_json_field();
+    });
+  }
+
+  //used to render a row
+  function props_render_row(id, text="", price=0, descr_page_id=4077, included=false){
+    //console.log(id + "| " + text + "| " + price );
+    var form_row = document.createElement("P");
+    form_row.setAttribute("propid", id);
+    form_row.innerHTML = 'Text <input size="15" oninput="prop_update_input(this)" propid="' + id + '" type="text" name="text" value="'+ text +'" /> &nbsp;&nbsp;&nbsp;&nbsp;';
+    form_row.innerHTML +=  'Price <input size="7" oninput="prop_update_input(this)" propid="' + id + '" type="text" name="price" value="'+ price +'" /> &nbsp;&nbsp;&nbsp;&nbsp;';
+    form_row.innerHTML +=  'Description Page <input size ="5" oninput="prop_update_input(this)" propid="' + id + '" type="text" name="descr_page_id" value="'+ descr_page_id +'" /> &nbsp;&nbsp;&nbsp;&nbsp;';
+    form_row.innerHTML +=  'Included <input onclick="prop_update_input(this)" propid="' + id + '" type="checkbox" name="included" id="included_'+ id +'"/> &nbsp;&nbsp;&nbsp;&nbsp;';
+
+    form_row.innerHTML +=  '<a class="w3-button w3-red" onclick="props_remove(this)">delete</a> &nbsp;&nbsp;&nbsp;&nbsp;';
+    var form = document.getElementById("props_add_prop");
+    form.insertBefore(form_row, document.getElementById("props_addNew"));
+      //set the checked prop for included checkbox
+      if(included){
+      document.getElementById("included_" + id).setAttribute("checked","checked");
+    }
+    //document.getElementById("props_admin_form_content").insertBefore(this.firstChild, form_row);
+  }
+
+  //adds an empty propery to the table and renders it
+  function props_add_new_row(){
+
+    var id = 0;
+    if (props.length > 0){
+      id = props[props.length-1].id + 1;
+    }
+
+    var prop = {
+      "id": id,
+      "text": "",
+      "price": 0,
+      "descr_page_id": 0,
+      "included": true
+    };
+
+    props_render_row(prop.id, prop.text, prop.price, prop.descr_page_id, prop.included );
+
+    props.push(prop);
+    props_update_json_field();
+  }
+</script>

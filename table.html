@@ -1,0 +1,206 @@
+<link rel="stylesheet" href="https://www.w3schools.com/w3css/4/w3.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+
+
+  <div id="prop_table_main" class="w3-card">
+    <header id="prop_table_included_header" class ="w3-container w3-lime w3-padding">
+      <h1>Personalizza il tuo pacchetto:</h1>
+    </header>
+    <div id="prop_table_included_row" class="w3-panel w3-cell-row">
+      <div id="prop_table_included" class="w3-cell" style="width:80%">
+      </div>
+      <div id="initial_price" class="w3-container w3-cell w3-cell-top w3-border-left">
+      </div>
+    </div>
+    <div id ="prop_table_optional" class="w3-light-gray w3-border">
+
+    </div>
+  </footer>
+  <h5 id="props_total" class="w3-right-align"> <a id="buy_btn" class="w3-button w3-green w3-round w3-margin"></a></h5>
+</footer>
+</div>
+
+<div id="buy">
+
+</div>
+
+<div id="modal" class="w3-modal w3-animate-zoom w3-center" style="display:none; margin-top: 10%;">
+  <div class="w3-modal-content" style="width:70%">
+    <div id="modal_content" class="w3-container">
+     <span onclick="document.getElementById('modal').style.display='none'"
+     class="w3-button w3-display-topright">&times;</span>
+     <div id ="page_content"></div>
+   </div>
+  </div>
+</div>
+
+<style>
+.infobox-text{
+  display: none;
+}
+ .infobox-text:hover{
+   display: block;
+ }
+</style>
+
+<script>
+
+//code to deal with total price
+var props_total = regular_price;
+function props_display_total(){
+  props_total = Math.round(props_total * 100) / 100
+  document.getElementById("buy_btn").innerHTML = '<i class="fa fa-shopping-cart" aria-hidden="true"></i>&nbsp;&nbsp;Acquista ora | € ' + props_total ;
+};
+
+function props_add_total(add_value){
+  props_total += add_value;
+  props_display_total();
+}
+
+function props_substract_total(substract_value){
+  props_total -= substract_value;
+  props_display_total();
+}
+
+//function to deal with ckeckbox click
+function props_checkbox_click(checkbox){
+  var prop_id = checkbox.getAttribute("propid");
+  var prop_index = checkbox.getAttribute("prop_index");
+  if (checkbox.checked){
+    props_add_total(Number(props[prop_index].price));
+  } else {
+    props_substract_total(Number(props[prop_index].price));
+  }
+}
+
+
+
+//code to handle table display
+  props.forEach(function(prop, index){
+
+    if(prop.included){
+      var table_row = document.createElement("DIV");
+
+      table_row.style.paddingLeft = "8px";
+
+      table_row.innerHTML = '<i class="fa fa-check w3-text-green w3-large props_checkbox" prop_index="' + index + '" aria-hidden="true"></i>';
+      table_row.innerHTML += "&nbsp;&nbsp;" + prop.text;
+      if (prop.descr_page_id > 0){
+        table_row.setAttribute("class", "props-infobox");
+        table_row.setAttribute("propid", prop.id);
+        table_row.innerHTML += '&nbsp;&nbsp;&nbsp;&nbsp;<a onclick="prop_display_modal(this)" href="#prop_table_main" pageid= "' + prop.descr_page_id + '"> <i propid="'+prop.id+'" class="fa fa-question-circle w3-text-dark-gray" aria-hidden="true"></i><div class="infobox-text" id="infobox-text-'+ prop.id +'"> &nbsp;&nbsp;&nbsp;&nbsp;Clicca per ulteriori informazioni</div> </a>&nbsp;&nbsp;&nbsp;&nbsp;';
+     }
+      document.getElementById("prop_table_included").appendChild(table_row);
+    } else {
+      var table_cell = document.createElement("DIV");
+      table_cell.setAttribute("class", "w3-cell-row w3-medium w3-padding-large");
+      if (index < props.length && index > 0){
+
+        table_cell.setAttribute("class", "w3-cell-row w3-border-top w3-medium w3-padding-large");
+      }
+
+      var table_row = document.createElement("DIV");
+      table_row.setAttribute("class", "w3-cell");
+      table_row.setAttribute("style", "width:80%");
+      table_row.setAttribute("propid", prop.id);
+    table_row.innerHTML = '<input class="props_checkbox" onclick="props_checkbox_click(this)" type="checkbox" prop_index="' + index + '" propid="' + prop.id + '" /> ' + prop.text;
+    if (prop.descr_page_id > 0){
+      table_row.setAttribute("class", table_row.getAttribute("class") + " props-infobox");
+      table_row.innerHTML += '&nbsp;&nbsp;&nbsp;&nbsp;<a href="#prop_table_main" onclick="prop_display_modal(this)" pageid= "' + prop.descr_page_id + '"> <i propid="'+prop.id+'" class="fa fa-question-circle w3-text-dark-gray" aria-hidden="true"></i><div class="infobox-text" id="infobox-text-'+ prop.id +'"> &nbsp;&nbsp;&nbsp;&nbsp;Clicca per ulteriori informazioni</div> </a>';
+    }
+
+
+
+    table_cell.appendChild(table_row);
+
+    var price_cell = document.createElement("DIV");
+    price_cell.setAttribute("class", "w3-cell");
+
+    price_cell.innerHTML += ' € ' + prop.price ;
+    table_cell.appendChild(price_cell);
+    document.getElementById("prop_table_optional").appendChild(table_cell);
+    }
+    document.getElementById("initial_price").innerHTML= ' € ' + regular_price;
+    //document.getElementById("prop_table").appendChild(table_row);
+  });
+
+//code to display a total
+
+props_display_total();
+
+jQuery(".fa-question-circle").on("mouseover", function(event){
+  jQuery("#infobox-text-" + event.target.getAttribute("propid")).css({"display": "inline"});
+  //console.log(event.target);
+});
+
+jQuery(".fa-question-circle").on("mouseleave", function(event){
+  jQuery("#infobox-text-" + event.target.getAttribute("propid")).css({"display": "none"});
+  //console.log(event.target);
+});
+
+function prop_display_modal(link){
+  var page_id = link.getAttribute("pageid");
+  if (page_id == 0){return;}
+
+  document.getElementById("page_content").innerHTML = "";
+
+  document.getElementById("modal").style.display = "block";
+
+  var loading_icon = document.createElement("DIV");
+  loading_icon.innerHTML = '<i class = "fa fa-spinner fa-pulse fa-3x fa-fw"></i>';
+  loading_icon.setAttribute("class", "w3-modal-content");
+  loading_icon.setAttribute("style", "background-color: rgba(0,0,0, 0.0); color: white; margin-top: 15%;");
+
+  document.getElementById("modal").appendChild(loading_icon);
+
+  jQuery.get("http://www.clickandgarden.it/wp-json/wp/v2/pages/" + page_id, function(data, status){
+    document.getElementById("modal").removeChild(loading_icon);
+      var page_content = document.getElementById("page_content");
+    page_content.innerHTML = data.content.rendered;
+    //document.getElementById("modal_content").appendChild(page_content);
+
+    //console.log(data);
+  });
+}
+
+jQuery("#buy_btn").click(function(){
+
+  var input_elements = document.getElementsByClassName("props_checkbox");
+  var props_checked = Array();
+
+  for (var i=0; i<input_elements.length; i++){
+      if (input_elements[i].tagName == "I"){
+        props_checked.push(props[input_elements[i].getAttribute("prop_index")].text);
+      }
+      if(input_elements[i].checked){
+        props_checked.push(props[input_elements[i].getAttribute("prop_index")].text);
+      }
+  }
+
+  var request = {"total": props_total,
+                  "props": props_checked,
+                  "product_id": product_id};
+
+  //console.log(request);
+
+  jQuery.post("/wp-json/props/addCart/", request, function(data, status){
+    //console.log(data + "|" + status)
+    if (status == "success"){
+      jQuery(location).attr("href", 'http://www.clickandgarden.it/checkout/?add-to-cart=' + product_id);
+    }
+  });
+});
+
+jQuery("#debug").click(function(){
+  jQuery.get("http://www.clickandgarden.it/wp-json/wp/v2/pages/4077", function(data, status){
+    document.getElementById("dbg_result").innerHTML = data.content.rendered;
+    console.log(data);
+  });
+});
+
+//DEBUG
+//jQuery("body").on("click",function(){
+//  console.log(regular_price + " | " + props_total);
+//});
+
+</script>
